@@ -4,7 +4,7 @@ author: "Ben Best for Sangwon Suh"
 date: "May 19, 2016"
 output:
   html_document:
-    code_folding: hide
+    code_folding: show
     toc_depth: 3
     toc: true
     toc_float: true
@@ -15,6 +15,14 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ## Sankey
+
+### History
+
+- 2016-06-03: initial Sankey
+- 2016-06-04: updated Sankey
+    - created combined positive + negative interactive sankey for true relative heights
+    - reduced nodePadding to 1
+    - turned off crowded country labels
 
 ### Setup
 
@@ -39,8 +47,8 @@ d = read_excel(
 m = d[2:9, 1:9]
 names(m) = c('sourcing', as.character(d[1, 2:9]))
 
-# nodes: unique sourcing and emitting countries
-nodes = data_frame(
+# nodes_p: unique sourcing and emitting countries
+nodes_p = data_frame(
   country = c(m$sourcing, names(m)[2:ncol(m)]),
   type    = c(
     rep('sourcing', 8),
@@ -49,8 +57,8 @@ nodes = data_frame(
     name = sprintf('%s-%0.1s', country, type),
     id   = as.integer(row_number() - 1))
 
-# links: get positive values, except to self country
-links = m %>%
+# links_p: get positive values, except to self country
+links_p = m %>%
   gather(emitting, mtons_co2, -sourcing) %>%
   mutate(
     mtons_co2 = as.numeric(mtons_co2)) %>%
@@ -58,12 +66,12 @@ links = m %>%
     sourcing != emitting,
     mtons_co2 > 0) %>%
   left_join(
-    nodes %>% 
+    nodes_p %>% 
       filter(type == 'sourcing') %>%
       select(sourcing=country, id_sourcing=id), 
     by='sourcing') %>%
   left_join(
-    nodes %>% 
+    nodes_p %>% 
       filter(type == 'emitting') %>%
       select(emitting=country, id_emitting=id), 
     by='emitting') %>%
@@ -71,9 +79,9 @@ links = m %>%
 
 # positive sankey ----
 sankeyNetwork(
-  Nodes = as.data.frame(nodes), 
+  Nodes = as.data.frame(nodes_p), 
   NodeID = 'country',
-  Links = as.data.frame(links), 
+  Links = as.data.frame(links_p), 
   Source = 'id_sourcing', Target = 'id_emitting', Value = 'mtons_co2',
   units = "MMt CO2", fontSize = 12, nodeWidth = 30, fontFamily = 'sans-serif')
 ```
@@ -112,26 +120,78 @@ links_n = n %>%
       select(sourcing=country, id_sourcing=id), 
     by='sourcing') %>%
   left_join(
-    nodes %>% 
+    nodes_n %>% 
       filter(type == 'emitting') %>%
       select(emitting=country, id_emitting=id), 
     by='emitting') %>%
   arrange(id_sourcing, id_emitting)
 
-# plot sankey
+# plot negative sankey
 sankeyNetwork(
   Nodes = as.data.frame(nodes_n), 
   NodeID = 'country',
   Links = as.data.frame(links_n), 
   Source = 'id_sourcing', Target = 'id_emitting', Value = 'mtons_co2',
   units = "MMt CO2", fontSize = 12, nodeWidth = 30, fontFamily = 'sans-serif')
-
-# plot in RStudio, Export as PNG
-# assemble in Adobe Illustrator with line + 0
 ```
+
+### Combined Interactive
+
+```{r}
+# all nodes: positive + negative with new ids
+id_n0 = max(nodes_p$id) + 1
+nodes_a = nodes_p %>%
+  mutate(
+    sign = 'positive',
+    name = sprintf('%0.1s-%s', sign, name)) %>%
+  bind_rows(
+    nodes_n %>%
+      mutate(
+        id   = id + id_n0,
+        sign = 'negative',
+        name = sprintf('%0.1s-%s', sign, name)))
+
+links_a = links_p %>%
+  bind_rows(
+    links_n %>%
+      mutate(
+        id_sourcing = id_sourcing + id_n0,
+        id_emitting = id_emitting + id_n0))
+
+# labels
+nodes_a$label = nodes_a$country
+# turn off labels for crowded countries
+lbls_off = c(
+  'p-CHN-s','n-CAN-s',                                       # positive, sourcing
+  'p-ITA-e','p-JPN-e','p-JPN-e','p-FRA-e','p-UK-e','p-US-e', # positive, emitting
+  'n-FRA-s','n-CAN-s',                                       # negative, sourcing
+  'n-FRA-e','n-CAN-e')                                       # negative, emitting
+nodes_a$label[nodes_a$name %in% lbls_off] = ''
+
+# plot all sankey
+sankeyNetwork(
+  Nodes = as.data.frame(nodes_a), 
+  NodeID = 'label', NodeGroup = 'country',
+  Links = as.data.frame(links_a), 
+  Source = 'id_sourcing', Target = 'id_emitting', Value = 'mtons_co2',
+  units = "MMt CO2", 
+  fontSize = 14, fontFamily = 'sans-serif',
+  nodePadding = 1, nodeWidth = 50)
+```
+
+### Combined Static
+
+Plot in RStudio, export as PNG, assemble in Adobe Illustrator:
+
+- add horizontal line
+- add 0
+
+![](img/sankey.png)
 
 
 ```{r skip, echo=F, eval=F}
+
+# OLD...
 
 # bind other positive/emitting parts of excel
 bind_rows(
@@ -167,8 +227,3 @@ button = tags$button("Download",
 )
 browsable(tags$html(sN, button))
 ```
-
-
-### Combined Static
-
-![](img/sankey.png)
