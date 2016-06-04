@@ -1,0 +1,178 @@
+---
+title: "emissions"
+author: "Ben Best for Sangwon Suh"
+date: "May 19, 2016"
+output:
+  html_document:
+    code_folding: hide
+    toc_depth: 3
+    toc: true
+    toc_float: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+TODO: 
+- datatable
+- caveats: no negative values
+
+## Sankey
+
+### Setup
+
+```{r positive sankey}
+suppressPackageStartupMessages({
+  library(dplyr)
+  library(tidyr)
+  library(readxl)
+  library(networkD3)
+})
+
+# read excel
+d = read_excel(
+  'data/Table_sourcing_terremissions_by_c_2016-05-18.xlsx', col_names=F) 
+# View(d)
+```
+
+### Positive Interactive
+
+```{r}
+# get matrix of data for sourcing to emitting
+m = d[2:9, 1:9]
+names(m) = c('sourcing', as.character(d[1, 2:9]))
+
+# nodes: unique sourcing and emitting countries
+nodes = data_frame(
+  country = c(m$sourcing, names(m)[2:ncol(m)]),
+  type    = c(
+    rep('sourcing', 8),
+    rep('emitting', 8))) %>%
+  mutate(
+    name = sprintf('%s-%0.1s', country, type),
+    id   = as.integer(row_number() - 1))
+
+# links: get positive values, except to self country
+links = m %>%
+  gather(emitting, mtons_co2, -sourcing) %>%
+  mutate(
+    mtons_co2 = as.numeric(mtons_co2)) %>%
+  filter(
+    sourcing != emitting,
+    mtons_co2 > 0) %>%
+  left_join(
+    nodes %>% 
+      filter(type == 'sourcing') %>%
+      select(sourcing=country, id_sourcing=id), 
+    by='sourcing') %>%
+  left_join(
+    nodes %>% 
+      filter(type == 'emitting') %>%
+      select(emitting=country, id_emitting=id), 
+    by='emitting') %>%
+  arrange(id_sourcing, id_emitting)
+
+# positive sankey ----
+sankeyNetwork(
+  Nodes = as.data.frame(nodes), 
+  NodeID = 'country',
+  Links = as.data.frame(links), 
+  Source = 'id_sourcing', Target = 'id_emitting', Value = 'mtons_co2',
+  units = "MMt CO2", fontSize = 12, nodeWidth = 30, fontFamily = 'sans-serif')
+```
+
+
+### Negative Interactive
+
+```{r negative sankey}
+# negative sankey ----
+n = d[24:31,2:3] %>%
+  select(country=X1, value=X2) %>%
+  mutate(
+    value = as.numeric(value),
+    sign  = 'negative',
+    role  = 'sourcing')
+
+# nodes_n: unique sourcing and emitting countries
+nodes_n = data_frame(
+  country = c(n$country, n$country),
+  type    = c(
+    rep('sourcing', nrow(n)),
+    rep('emitting', nrow(n)))) %>%
+  mutate(
+    name = sprintf('%s-%0.1s', country, type),
+    id   = as.integer(row_number() - 1))
+
+# links_n: get positive values, except to self country
+links_n = n %>%
+  mutate(
+    mtons_co2 = abs(value),
+    sourcing = country,
+    emitting = country) %>%
+  left_join(
+    nodes_n %>% 
+      filter(type == 'sourcing') %>%
+      select(sourcing=country, id_sourcing=id), 
+    by='sourcing') %>%
+  left_join(
+    nodes %>% 
+      filter(type == 'emitting') %>%
+      select(emitting=country, id_emitting=id), 
+    by='emitting') %>%
+  arrange(id_sourcing, id_emitting)
+
+# plot sankey
+sankeyNetwork(
+  Nodes = as.data.frame(nodes_n), 
+  NodeID = 'country',
+  Links = as.data.frame(links_n), 
+  Source = 'id_sourcing', Target = 'id_emitting', Value = 'mtons_co2',
+  units = "MMt CO2", fontSize = 12, nodeWidth = 30, fontFamily = 'sans-serif')
+
+# plot in RStudio, Export as PNG
+# assemble in Adobe Illustrator with line + 0
+```
+
+
+```{r skip, echo=F, eval=F}
+
+# bind other positive/emitting parts of excel
+bind_rows(
+d[16:23,2:3] %>%
+select(country=X1, value=X2) %>%
+mutate(
+  value = as.numeric(value),
+  sign  = 'positive',
+  role  = 'sourcing'),
+d[16:23,6:7] %>%
+  select(country=X5, value=X6) %>%
+  mutate(
+    value = as.numeric(value),
+    sign  = 'positive',
+    role  = 'emitting'),
+d[24:31,6:7] %>%
+  select(country=X5, value=X6) %>%
+  mutate(
+    value = as.numeric(value),
+    sign  = 'negative',
+    role  = 'emitting'))
+
+# export SVG
+library(htmltools)
+button = tags$button("Download",
+  class="bookmarklet ver2", 
+   onclick="(function () { 
+      var e = document.createElement('script');
+      e.setAttribute('src', 'https://nytimes.github.io/svg-crowbar/svg-crowbar-2.js');
+      e.setAttribute('class', 'svg-crowbar'); 
+      document.body.appendChild(e); })();
+   "
+)
+browsable(tags$html(sN, button))
+```
+
+
+### Combined Static
+
+![](img/sankey.png)
