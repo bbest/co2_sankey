@@ -236,7 +236,6 @@ div.tocify {
 </div>
 
 
-<p>TODO: - datatable - caveats: no negative values</p>
 <div id="sankey" class="section level2">
 <h2>Sankey</h2>
 <div id="setup" class="section level3">
@@ -296,8 +295,8 @@ sankeyNetwork(
   Links = as.data.frame(links), 
   Source = 'id_sourcing', Target = 'id_emitting', Value = 'mtons_co2',
   units = &quot;MMt CO2&quot;, fontSize = 12, nodeWidth = 30, fontFamily = 'sans-serif')</code></pre>
-<div id="htmlwidget-404" style="width:672px;height:480px;" class="sankeyNetwork html-widget"></div>
-<script type="application/json" data-for="htmlwidget-404">{"x":{"links":{"source":[0,0,0,0,0,0,1,1,1,1,2,2,2,2,2,2,3,3,3,3,3,3,4,4,4,5,5,6,6,6,6,7,7,7,7],"target":[9,10,12,13,14,15,10,12,14,15,8,9,11,12,13,15,8,10,12,13,14,15,9,10,15,10,15,9,10,12,15,8,10,12,13],"value":[1912.54704084102,14885.6646166088,1088.37922061826,34617.6544627581,1211.89411281844,332015.454544321,2401.59577157777,557.350997772701,1046.6314480985,139095.303013526,8740.8645936817,3476.29504510136,1082.93915781616,3425.51309004934,1625.39971225549,76769.7184349519,941.079522776315,6861.69745459185,3889.1634673041,5054.19345961482,1764.49808137688,42047.7529811348,903.075568340203,2401.81955764839,33859.5373916827,2065.29221379028,30120.6638015753,1046.58214316416,7089.71285873191,451.735224890908,27554.2739732037,2843.81171212616,1175.28297973591,327.406088044913,1431.28979696471]},"nodes":{"name":["US","JPN","GER","UK","FRA","CAN","ITA","CHN","US","JPN","GER","UK","FRA","CAN","ITA","CHN"],"group":["US","JPN","GER","UK","FRA","CAN","ITA","CHN","US","JPN","GER","UK","FRA","CAN","ITA","CHN"]},"options":{"NodeID":"country","NodeGroup":"country","LinkGroup":null,"colourScale":"d3.scale.category20()","fontSize":12,"fontFamily":"sans-serif","nodeWidth":30,"nodePadding":10,"units":"MMt CO2","margin":{"top":null,"right":null,"bottom":null,"left":null}}},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-2150" style="width:672px;height:480px;" class="sankeyNetwork html-widget"></div>
+<script type="application/json" data-for="htmlwidget-2150">{"x":{"links":{"source":[0,0,0,0,0,0,1,1,1,1,2,2,2,2,2,2,3,3,3,3,3,3,4,4,4,5,5,6,6,6,6,7,7,7,7],"target":[9,10,12,13,14,15,10,12,14,15,8,9,11,12,13,15,8,10,12,13,14,15,9,10,15,10,15,9,10,12,15,8,10,12,13],"value":[1912.54704084102,14885.6646166088,1088.37922061826,34617.6544627581,1211.89411281844,332015.454544321,2401.59577157777,557.350997772701,1046.6314480985,139095.303013526,8740.8645936817,3476.29504510136,1082.93915781616,3425.51309004934,1625.39971225549,76769.7184349519,941.079522776315,6861.69745459185,3889.1634673041,5054.19345961482,1764.49808137688,42047.7529811348,903.075568340203,2401.81955764839,33859.5373916827,2065.29221379028,30120.6638015753,1046.58214316416,7089.71285873191,451.735224890908,27554.2739732037,2843.81171212616,1175.28297973591,327.406088044913,1431.28979696471]},"nodes":{"name":["US","JPN","GER","UK","FRA","CAN","ITA","CHN","US","JPN","GER","UK","FRA","CAN","ITA","CHN"],"group":["US","JPN","GER","UK","FRA","CAN","ITA","CHN","US","JPN","GER","UK","FRA","CAN","ITA","CHN"]},"options":{"NodeID":"country","NodeGroup":"country","LinkGroup":null,"colourScale":"d3.scale.category20()","fontSize":12,"fontFamily":"sans-serif","nodeWidth":30,"nodePadding":10,"units":"MMt CO2","margin":{"top":null,"right":null,"bottom":null,"left":null}}},"evals":[],"jsHooks":[]}</script>
 </div>
 <div id="negative-interactive" class="section level3">
 <h3>Negative Interactive</h3>
@@ -344,8 +343,8 @@ sankeyNetwork(
   Links = as.data.frame(links_n), 
   Source = 'id_sourcing', Target = 'id_emitting', Value = 'mtons_co2',
   units = &quot;MMt CO2&quot;, fontSize = 12, nodeWidth = 30, fontFamily = 'sans-serif')</code></pre>
-<div id="htmlwidget-1437" style="width:672px;height:480px;" class="sankeyNetwork html-widget"></div>
-<script type="application/json" data-for="htmlwidget-1437">{"x":{"links":{"source":[0,1,2,3,4,5,6,7],"target":[8,9,10,11,12,13,14,15],"value":[285522.546401279,51057.2714482366,79602.881994056,54293.2736460772,4298.63150126701,6656.13872567897,29837.5897417764,38468.7035939026]},"nodes":{"name":["US","JPN","GER","UK","FRA","CAN","ITA","CHN","US","JPN","GER","UK","FRA","CAN","ITA","CHN"],"group":["US","JPN","GER","UK","FRA","CAN","ITA","CHN","US","JPN","GER","UK","FRA","CAN","ITA","CHN"]},"options":{"NodeID":"country","NodeGroup":"country","LinkGroup":null,"colourScale":"d3.scale.category20()","fontSize":12,"fontFamily":"sans-serif","nodeWidth":30,"nodePadding":10,"units":"MMt CO2","margin":{"top":null,"right":null,"bottom":null,"left":null}}},"evals":[],"jsHooks":[]}</script>
+<div id="htmlwidget-8396" style="width:672px;height:480px;" class="sankeyNetwork html-widget"></div>
+<script type="application/json" data-for="htmlwidget-8396">{"x":{"links":{"source":[0,1,2,3,4,5,6,7],"target":[8,9,10,11,12,13,14,15],"value":[285522.546401279,51057.2714482366,79602.881994056,54293.2736460772,4298.63150126701,6656.13872567897,29837.5897417764,38468.7035939026]},"nodes":{"name":["US","JPN","GER","UK","FRA","CAN","ITA","CHN","US","JPN","GER","UK","FRA","CAN","ITA","CHN"],"group":["US","JPN","GER","UK","FRA","CAN","ITA","CHN","US","JPN","GER","UK","FRA","CAN","ITA","CHN"]},"options":{"NodeID":"country","NodeGroup":"country","LinkGroup":null,"colourScale":"d3.scale.category20()","fontSize":12,"fontFamily":"sans-serif","nodeWidth":30,"nodePadding":10,"units":"MMt CO2","margin":{"top":null,"right":null,"bottom":null,"left":null}}},"evals":[],"jsHooks":[]}</script>
 <pre class="r"><code># plot in RStudio, Export as PNG
 # assemble in Adobe Illustrator with line + 0</code></pre>
 </div>

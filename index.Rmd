@@ -14,10 +14,6 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-TODO: 
-- datatable
-- caveats: no negative values
-
 ## Sankey
 
 ### Setup
