@@ -1,0 +1,9 @@
+base
+dplyr
+tidyr
+readxl
+networkD3
+ggplot2
+sp
+geosphere
+maps

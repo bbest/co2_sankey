@@ -11,7 +11,7 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, cache=T)
 ```
 
 ## Sankey
@@ -23,6 +23,7 @@ knitr::opts_chunk$set(echo = TRUE)
     - combined positive + negative interactive sankey for true relative heights
     - reduced nodePadding to 1 so not so vertically spaced
     - turned off crowded country labels for short height values
+- 2016-06-09: added map with bar chart and arrows
 
 ### Setup
 
@@ -188,6 +189,154 @@ Plot in RStudio, export as PNG, assemble in Adobe Illustrator:
 
 ![](img/sankey.png)
 
+## Map
+
+### Prep Data and Plot Base Map
+
+```{r}
+suppressPackageStartupMessages({
+  library(dplyr)
+  library(tidyr)
+  library(readxl)
+  library(ggplot2)
+  library(geosphere)
+})
+
+# initial map ----
+
+# get world map data
+w = map_data('world') # w %>% tbl_df() %>% View()
+
+# country from region
+region_country = c(
+  'USA'     = 'US',
+  'Japan'   = 'JPN',
+  'Germany' = 'GER',
+  'UK'      = 'UK',
+  'Italy'   = 'ITA',
+  'France'  = 'FRA',
+  'Canada'  = 'CAN',
+  'China'   = 'CHN',
+  'other'   = 'other')
+
+# colors (http://html-color-codes.info/colors-from-image/)
+country_colors = c(
+  'US'   = '#2671B0',
+  'JPN'   = '#A8C1E5',
+  'GER'   = '#F4772B',
+  'UK'    = '#FBB473',
+  'ITA'   = '#D22532',
+  'FRA'   = '#35A048',
+  'CAN'   = '#9ACF82',
+  'CHN'   = '#F48E92',
+  'other' = 'gray80')
+
+# assign countries
+w = w %>%
+  mutate(
+    country = ifelse(
+      region %in% names(region_country),
+      region_country[region],
+      'other'))
+w$country = factor(w$country, region_country) # table(w$country)
+
+# map
+m = ggplot(w, aes(x=long, y=lat, group=group, fill=country)) + # 
+  geom_polygon() + #color='gray80', lwd=0.5) +
+  scale_fill_manual(values = country_colors) # + theme(legend.position = "none")
+m
+
+# arrows ----
+
+# read excel
+d2 = read_excel(
+  'data/Table_sourcing_terremissions_by_c_2016-05-18.xlsx', 
+  sheet = 2, skip = 21) # View(d2)
+
+a = d2 %>%
+  gather(emitting, mtons_co2, -sourcing, na.rm=T) %>%
+  filter(
+    sourcing != 'Total',
+    emitting != 'Total') #; View(a)
+
+# get bar chart data: within-territory emission reduction due to sourcing decision by the country 
+a1 = a %>%
+  filter(sourcing == emitting)
+
+# get arrow data 
+a2 = a %>%
+  filter(sourcing != emitting) %>%
+  arrange(sourcing, emitting)
+
+# get country centroid points
+p = aggregate(
+  cbind(long, lat) ~ country, 
+  data = w %>%
+    filter(country != 'other') %>%
+    filter(country != 'US' | (country == 'US' & is.na(subregion))), 
+  FUN=mean) %>%
+  mutate(country = as.character(country))
+# manual centroid for Canada
+p[p$country=='CAN',c('long','lat')] = c(-100,60)
+
+ap = a2 %>%
+  left_join(
+    p %>% rename(sourcing_lon=long, sourcing_lat=lat), 
+    by=c('sourcing'='country')) %>%
+  left_join(
+    p %>% rename(emitting_lon=long, emitting_lat=lat), 
+    by=c('emitting'='country')) # View(ap)
+
+# bar data
+b = a1 %>%
+  mutate(
+    length = scales::rescale(abs(mtons_co2))) %>%
+  left_join(p, by=c('sourcing'='country'))
+```
+
+### Plot with Arrows
+
+```{r plot map with arrows}
+# map with arrows
+m + 
+  geom_curve(
+    aes(
+      x = sourcing_lon, y = sourcing_lat,
+      xend = emitting_lon, yend = emitting_lat,
+      size = mtons_co2),
+    data = ap, inherit.aes = F,
+    arrow = arrow(length = unit(0.03, 'npc'), type='open'),
+    color='black', alpha=0.4) +
+  coord_cartesian(xlim = c(-160, 150), ylim = c(22, 72)) + 
+  geom_rect(
+    data = b, 
+    aes(
+      xmin = long - 5      , xmax = long + 5,
+      ymin = lat - length*15, ymax = lat), 
+    inherit.aes = F)
+```
+
+### Plot without Arrows
+
+```{r plot map without arrows}
+# map without arrows
+m + 
+  geom_curve(
+    aes(
+      x = sourcing_lon, y = sourcing_lat,
+      xend = emitting_lon, yend = emitting_lat,
+      size = mtons_co2),
+    data = ap, inherit.aes = F,
+    #arrow = arrow(length = unit(0.03, 'npc'), type='open'),
+    color='black', alpha=0.4) +
+  coord_cartesian(xlim = c(-160, 150), ylim = c(22, 72)) + 
+  geom_rect(
+    data = b, 
+    aes(
+      xmin = long - 5      , xmax = long + 5,
+      ymin = lat - length*15, ymax = lat), 
+    inherit.aes = F)
+```
 
 ```{r skip, echo=F, eval=F}
 
@@ -227,3 +376,26 @@ button = tags$button("Download",
 )
 browsable(tags$html(sN, button))
 ```
+
+
+## Resources
+
+- [Reshaping Horse Import/Export Data to Fit a Sankey Diagram | R-bloggers](http://www.r-bloggers.com/reshaping-horse-importexport-data-to-fit-a-sankey-diagram/)
+
+    ![](http://i2.wp.com/ouseful.files.wordpress.com/2013/02/guardian-datablog-eu-trade-in-horsemeat.png?zoom=2&resize=456%2C466)
+  
+    ![](http://i0.wp.com/ouseful.files.wordpress.com/2013/02/horse-exports-eu-sankey-demo.png?zoom=2&resize=456%2C263)
+
+- [dgrtwo/rpanama: The Panama Papers offshore leaks database in R](https://github.com/dgrtwo/rpanama)
+
+    ![](https://github.com/dgrtwo/rpanama/raw/master/README-unnamed-chunk-6-1.png)
+
+- [RPubs - World light and great circle](https://rpubs.com/BenChen/11161)
+
+- [Robin Lovelace - Great circles on a world map with rworldmap and ggplot2 packages](http://robinlovelace.net/2014/06/22/great-circles-in-rworldmap-ggplot2.html)
+
+    ![](https://raw.githubusercontent.com/Robinlovelace/Creating-maps-in-R/master/vignettes/world-great-circles_files/figure-html/Beautifying.png)
+  
+- [Arc Diagrams in R: Les Miserables | R-bloggers](http://www.r-bloggers.com/arc-diagrams-in-r-les-miserables/)
+
+    ![](http://i1.wp.com/gastonsanchez.files.wordpress.com/2013/02/miserables_arcplot.png?zoom=2&resize=444%2C236)
